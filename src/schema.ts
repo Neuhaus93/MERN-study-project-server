@@ -65,7 +65,7 @@ const typeDefs = gql`
       body: String!
       category: String!
     ): Post!
-    deletePost(userId: String!, postId: String!): String!
+    deletePost(userId: ID!, postId: ID!): Post!
     createProduct(
       userId: ID!
       title: String!

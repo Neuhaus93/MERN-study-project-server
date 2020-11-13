@@ -58,18 +58,17 @@ const postsResolvers = {
 
       return post;
     },
-    async deletePost(_, { userId, postId }): Promise<string> {
+    async deletePost(_, { userId, postId }): Promise<IPost> {
       if (userId.trim() === '' || postId.trim() === '') {
-        throw new AuthenticationError('Action not allowed');
+        throw new AuthenticationError('User and post ID cannot be empty');
       }
 
       try {
         const post = await PostModel.findById(postId);
-        if (userId === post.creator._id) {
-          await post.deleteOne();
-          return 'Post deleted successfully';
+        if (userId === post.creator.toString()) {
+          return await post.deleteOne();
         } else {
-          throw new AuthenticationError('Action not allowed');
+          throw new AuthenticationError('User cannot perform this action');
         }
       } catch (err) {
         throw new Error(err);
