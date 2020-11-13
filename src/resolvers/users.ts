@@ -66,7 +66,7 @@ const usersResolvers = {
         favoriteAds: [],
         imgSrc: '',
         subscription: {
-          current: '',
+          current: 'free',
           expirationDate: '',
           payHistory: [],
         },

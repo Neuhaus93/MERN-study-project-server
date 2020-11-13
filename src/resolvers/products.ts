@@ -53,7 +53,7 @@ const productsResolvers = {
       }
 
       try {
-        const products = await ProductModel.find();
+        const products = await ProductModel.find().sort({ createdAt: -1 });
         const filteredProducts = products.filter((e) =>
           favoritesList.includes(e._id.toString())
         );
