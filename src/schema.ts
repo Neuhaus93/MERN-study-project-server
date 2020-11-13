@@ -85,6 +85,7 @@ const typeDefs = gql`
     addUserImage(firebaseId: String!, imageSrc: String!): User!
     replyPost(postId: ID!, userId: ID!, body: String!): Post!
     deleteReply(postId: ID!, replyId: ID!): Post!
+    deleteProduct(userId: ID!, productId: ID!): Product!
   }
 `;
 

@@ -1,4 +1,4 @@
-import { UserInputError } from 'apollo-server';
+import { UserInputError, AuthenticationError } from 'apollo-server';
 
 import { IProduct } from '../types';
 import { ProductModel, UserModel } from '../models';
@@ -115,6 +115,26 @@ const productsResolvers = {
 
         const updatedProduct = oldProduct.save();
         return updatedProduct;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async deleteProduct(_, { userId, productId }): Promise<IProduct> {
+      if (!userId || !productId) {
+        throw new UserInputError('Cannot have undefined IDs');
+      }
+
+      if (userId.trim() === '' || productId.trim() === '') {
+        throw new UserInputError('IDs cannot be empty');
+      }
+
+      try {
+        const product = await ProductModel.findById(productId);
+        if (userId === product.creator.toString()) {
+          return await product.deleteOne();
+        } else {
+          throw new AuthenticationError('User cannot perform this action');
+        }
       } catch (err) {
         console.log(err);
       }
