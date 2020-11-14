@@ -53,12 +53,41 @@ const productsResolvers = {
       }
 
       try {
-        const products = await ProductModel.find().sort({ createdAt: -1 });
-        const filteredProducts = products.filter((e) =>
-          favoritesList.includes(e._id.toString())
-        );
-        // products.forEach((e) => console.log(e._id.toString()));
-        return filteredProducts;
+        const products = await ProductModel.find({
+          _id: { $in: favoritesList },
+        }).sort({ createdAt: -1 });
+        return products;
+      } catch (err) {
+        throw new Error(err);
+      }
+    },
+    async searchProduct(_, { term }): Promise<IProduct[]> {
+      //TODO: Fix this thing
+      if (!term || term.trim() === '') {
+        throw new UserInputError('Must have a search term');
+      }
+
+      return [];
+      // const where = {
+      //   $or: [
+      //     { title: { $regex: term } },
+      //     { description: { $regex: term } },
+      //   ],
+      // };
+
+      const where = { $text: { $search: term } };
+
+      try {
+        await ProductModel.createIndexes();
+        const foundProducts = await ProductModel.find(where).sort({
+          createdAt: -1,
+        });
+        // const foundProducts = await ProductModel.find({
+        //   title: { $regex: term },
+        // });
+        // .find().sort({ createdAt: -1 });
+
+        return foundProducts;
       } catch (err) {
         throw new Error(err);
       }
