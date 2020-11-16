@@ -62,30 +62,16 @@ const productsResolvers = {
       }
     },
     async searchProduct(_, { term }): Promise<IProduct[]> {
-      //TODO: Fix this thing
       if (!term || term.trim() === '') {
         throw new UserInputError('Must have a search term');
       }
 
-      return [];
-      // const where = {
-      //   $or: [
-      //     { title: { $regex: term } },
-      //     { description: { $regex: term } },
-      //   ],
-      // };
-
       const where = { $text: { $search: term } };
 
       try {
-        await ProductModel.createIndexes();
         const foundProducts = await ProductModel.find(where).sort({
           createdAt: -1,
         });
-        // const foundProducts = await ProductModel.find({
-        //   title: { $regex: term },
-        // });
-        // .find().sort({ createdAt: -1 });
 
         return foundProducts;
       } catch (err) {

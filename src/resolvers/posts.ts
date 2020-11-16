@@ -36,6 +36,23 @@ const postsResolvers = {
         throw new Error(err);
       }
     },
+    async searchPost(_, { term }): Promise<IPost[]> {
+      if (!term || term.trim() === '') {
+        throw new UserInputError('Must have a search term');
+      }
+
+      const where = { $text: { $search: term } };
+
+      try {
+        const foundProducts = await PostModel.find(where).sort({
+          createdAt: -1,
+        });
+
+        return foundProducts;
+      } catch (err) {
+        throw new Error(err);
+      }
+    },
   },
   Mutation: {
     async createPost(_, { userId, title, body, category }): Promise<IPost> {
