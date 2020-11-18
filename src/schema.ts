@@ -57,8 +57,8 @@ const typeDefs = gql`
     getPost(postId: ID!): Post
     getProduct(productId: ID!): Product
     getProducts(category: String!): [Product]
-    searchProduct(term: String!): [Product]
-    searchPost(term: String!): [Post]
+    searchProducts(term: String!): [Product]
+    searchPosts(term: String!): [Post]
   }
   type Mutation {
     createPost(

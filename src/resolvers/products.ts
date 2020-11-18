@@ -61,7 +61,7 @@ const productsResolvers = {
         throw new Error(err);
       }
     },
-    async searchProduct(_, { term }): Promise<IProduct[]> {
+    async searchProducts(_, { term }): Promise<IProduct[]> {
       if (!term || term.trim() === '') {
         throw new UserInputError('Must have a search term');
       }
