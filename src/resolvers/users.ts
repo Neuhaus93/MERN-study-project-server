@@ -21,24 +21,13 @@ const usersResolvers = {
 
       if (mongoId) {
         try {
-          const user = await UserModel.findById(mongoId);
-
-          if (user) {
-            return user;
-          } else {
-            throw new Error('MongoID - User not found');
-          }
+          return await UserModel.findById(mongoId);
         } catch (err) {
           throw new Error(err);
         }
       } else {
         try {
-          const user = await UserModel.findOne({ firebaseId });
-          if (user) {
-            return user;
-          } else {
-            throw new Error('FirebaseID - User not found');
-          }
+          return await UserModel.findOne({ firebaseId });
         } catch (err) {
           throw new Error(err);
         }
@@ -63,6 +52,12 @@ const usersResolvers = {
         firstName,
         lastName,
         email,
+        socials: {
+          phoneNumber: '',
+          facebook: '',
+          linkedin: '',
+          instagram: '',
+        },
         favoriteAds: [],
         imgSrc: '',
         subscription: {
@@ -75,6 +70,41 @@ const usersResolvers = {
 
       const user = await newUser.save();
       return user;
+    },
+    async updateUser(_, { userId, input }): Promise<IUser> {
+      if (!userId || userId.trim() === '') {
+        throw new UserInputError('Must have the user ID');
+      }
+      const {
+        firstName,
+        lastName,
+        phoneNumber,
+        facebook,
+        linkedin,
+        instagram,
+      } = input;
+      if (!firstName && !lastName) {
+        throw new Error('All inputs are empty');
+      }
+
+      try {
+        const user = await UserModel.findById(userId);
+        if (firstName) {
+          user.firstName = firstName;
+        }
+        if (lastName) {
+          user.lastName = lastName;
+        }
+
+        user.socials.phoneNumber = phoneNumber;
+        user.socials.facebook = facebook;
+        user.socials.linkedin = linkedin;
+        user.socials.instagram = instagram;
+
+        return await user.save();
+      } catch (err) {
+        console.log(err);
+      }
     },
     async likeProduct(_, { userId, productId }): Promise<IUser> {
       // If arguments are not passed correctly, throw an error

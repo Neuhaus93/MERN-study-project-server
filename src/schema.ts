@@ -1,6 +1,25 @@
 import { gql } from 'apollo-server';
 
 const typeDefs = gql`
+  type User {
+    id: ID!
+    firebaseId: String!
+    firstName: String!
+    lastName: String!
+    fullName: String
+    email: String!
+    socials: Socials
+    imgSrc: String!
+    likes: [ID]!
+    subscription: Subscription!
+    createdAt: String!
+  }
+  type Socials {
+    phoneNumber: String
+    facebook: String
+    linkedin: String
+    instagram: String
+  }
   type Post {
     id: ID!
     creator: User!
@@ -28,18 +47,6 @@ const typeDefs = gql`
     imagesSrc: [String]!
     createdAt: String!
   }
-  type User {
-    id: ID!
-    firebaseId: String!
-    firstName: String!
-    lastName: String!
-    fullName: String
-    email: String!
-    imgSrc: String!
-    likes: [ID]!
-    subscription: Subscription!
-    createdAt: String!
-  }
   type Subscription {
     current: String!
     expirationDate: String!
@@ -49,6 +56,16 @@ const typeDefs = gql`
     date: String!
     ammount: Int!
   }
+  ## --- INPUTS --- ##
+  input EditUserInput {
+    firstName: String!
+    lastName: String!
+    phoneNumber: String
+    facebook: String
+    linkedin: String
+    instagram: String
+  }
+  ## --- QUERIES --- ##
   type Query {
     getUser(firebaseId: String, mongoId: String): User!
     getUserProducts(userId: ID!): [Product]
@@ -60,6 +77,7 @@ const typeDefs = gql`
     searchProducts(term: String!): [Product]
     searchPosts(term: String!): [Post]
   }
+  ## --- MUTATIONS --- ##
   type Mutation {
     createPost(
       userId: ID!
@@ -82,6 +100,7 @@ const typeDefs = gql`
       lastName: String!
       email: String!
     ): User!
+    updateUser(userId: ID!, input: EditUserInput): User!
     likeProduct(userId: ID!, productId: ID!): User!
     addProductImages(id: ID!, imagesSrc: [String]!): Product!
     addUserImage(firebaseId: String!, imageSrc: String!): User!

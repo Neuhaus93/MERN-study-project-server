@@ -5,9 +5,15 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   email: string;
+  socials: {
+    phoneNumber: String;
+    facebook: String;
+    linkedin: String;
+    instagram: String;
+  };
   imgSrc: string;
   likes: string[];
-  subscription: [ISubscription];
+  subscription: ISubscription[];
   createdAt: string;
 }
 

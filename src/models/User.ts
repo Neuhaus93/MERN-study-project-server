@@ -7,6 +7,12 @@ const userSchema: Schema = new Schema({
   firstName: String,
   lastName: String,
   email: String,
+  socials: {
+    phoneNumber: String,
+    facebook: String,
+    linkedin: String,
+    instagram: String,
+  },
   imgSrc: String,
   likes: [String]!,
   subscription: {
