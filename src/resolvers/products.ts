@@ -1,6 +1,6 @@
 import { UserInputError, AuthenticationError } from 'apollo-server';
 
-import { IProduct } from '../types';
+import { IProduct, UpdateProductInput } from '../types';
 import { ProductModel, UserModel } from '../models';
 
 const productsResolvers = {
@@ -132,6 +132,49 @@ const productsResolvers = {
         return updatedProduct;
       } catch (err) {
         console.log(err);
+      }
+    },
+    async updateProduct(
+      _,
+      { updateProductInput }: UpdateProductInput
+    ): Promise<IProduct> {
+      const {
+        userId,
+        productId,
+        title,
+        description,
+        location,
+        price,
+        category,
+        imagesSrc,
+      } = updateProductInput;
+
+      if (!userId || !productId || !userId.trim() || !productId.trim()) {
+        throw new UserInputError('Cannot have undefined IDs');
+      }
+
+      try {
+        const product = await ProductModel.findById(productId).populate(
+          'creator'
+        );
+        if (!product) {
+          throw new UserInputError('Product does not exist');
+        }
+
+        if (product.creator.id !== userId) {
+          throw new AuthenticationError('User cannot perform this action');
+        }
+
+        title && (product.title = title);
+        description && (product.description = description);
+        location && (product.location = location);
+        price && (product.price = price);
+        category && (product.category = category);
+        imagesSrc && (product.imagesSrc = imagesSrc);
+
+        return await product.save();
+      } catch (err) {
+        throw new Error(err);
       }
     },
     async deleteProduct(_, { userId, productId }): Promise<IProduct> {

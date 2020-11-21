@@ -65,6 +65,16 @@ const typeDefs = gql`
     linkedin: String
     instagram: String
   }
+  input UpdateProductInput {
+    userId: ID!
+    productId: ID!
+    title: String
+    description: String
+    location: String
+    category: String
+    price: Int
+    imagesSrc: [String]
+  }
   ## --- QUERIES --- ##
   type Query {
     getUser(firebaseId: String, mongoId: String): User!
@@ -101,6 +111,7 @@ const typeDefs = gql`
       email: String!
     ): User!
     updateUser(userId: ID!, input: EditUserInput): User!
+    updateProduct(updateProductInput: UpdateProductInput!): Product!
     likeProduct(userId: ID!, productId: ID!): User!
     addProductImages(id: ID!, imagesSrc: [String]!): Product!
     addUserImage(firebaseId: String!, imageSrc: String!): User!
