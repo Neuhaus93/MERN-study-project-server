@@ -83,6 +83,7 @@ const typeDefs = gql`
     getPosts: [Post]
     getPost(postId: ID!): Post
     getProduct(productId: ID!): Product
+    getHomepageProducts: [Product]
     getProducts(category: String!): [Product]
     searchProducts(term: String!): [Product]
     searchPosts(term: String!): [Post]

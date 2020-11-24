@@ -20,10 +20,19 @@ const productsResolvers = {
         throw new Error(err);
       }
     },
+    async getHomepageProducts(): Promise<IProduct[]> {
+      try {
+        return await ProductModel.find()
+          .limit(24)
+          .sort({ createdAt: -1 });
+      } catch (err) {
+        throw new Error(err);
+      }
+    },
     async getProducts(_, { category }): Promise<IProduct[]> {
       try {
         const products = await ProductModel.find().sort({ createdAt: -1 });
-        return category
+        return category //TODO: Fix this filter (filter on query)
           ? products.filter((product) => product.category === category)
           : products;
       } catch (err) {
