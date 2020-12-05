@@ -2,10 +2,11 @@ import { AuthenticationError, UserInputError } from 'apollo-server';
 
 import { IPost } from '../types';
 import { PostModel, UserModel } from '../models';
+import { Post, User } from '../newModels';
 
 const postsResolvers = {
   Query: {
-    getPost: async (_, { postId }): Promise<IPost> => {
+    post: async (_, { postId }): Promise<IPost> => {
       if (postId.trim() === '') {
         throw new UserInputError('Post ID must not be empty');
       }

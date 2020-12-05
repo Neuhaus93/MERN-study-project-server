@@ -1,27 +1,35 @@
+import 'reflect-metadata';
 import mongoose from 'mongoose';
+import { createLocalServer } from './server';
 require('dotenv').config();
 
-import { createLocalServer } from './server';
+const main = async () => {
+  if (!process.env.MONGODB_URI) {
+    return;
+  }
 
-const server = createLocalServer();
+  const server = await createLocalServer();
 
-const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 4000;
 
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+  mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 
-const db = mongoose.connection;
+  const db = mongoose.connection;
 
-db.on('error', console.error.bind(console, 'connection error: '));
+  db.on('error', console.error.bind(console, 'connection error: '));
 
-db.on('open', function() {
-  console.log('MongoDB Connected');
-  server
-    .listen({ port: PORT })
-    .then((res) => {
-      console.log(`🚀 Server is running at ${res.url}`);
-    })
-    .catch((err) => console.error(err));
-});
+  db.on('open', function () {
+    console.log('MongoDB Connected');
+    server
+      .listen({ port: PORT })
+      .then((res) => {
+        console.log(`🚀 Server is running at ${res.url}`);
+      })
+      .catch((err) => console.error(err));
+  });
+};
+
+main();

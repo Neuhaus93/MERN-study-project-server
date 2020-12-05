@@ -1,11 +1,15 @@
 import { ApolloServer } from 'apollo-server';
-import { typeDefs } from './schema';
-import { resolvers } from './resolvers';
+import { buildSchema } from 'type-graphql';
+import { PostsResolver } from './resolvers/posts.resolver';
+import { ProductsResolver } from './resolvers/products.resolver';
+import { UsersResolver } from './resolvers/users.resolver';
 
-function createLocalServer() {
+async function createLocalServer() {
   return new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema: await buildSchema({
+      resolvers: [PostsResolver, ProductsResolver, UsersResolver],
+      validate: false,
+    }),
   });
 }
 

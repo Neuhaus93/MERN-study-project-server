@@ -81,7 +81,7 @@ const typeDefs = gql`
     getUserProducts(userId: ID!): [Product]
     getUserFavorites(favoritesList: [String]!): [Product]
     getPosts: [Post]
-    getPost(postId: ID!): Post
+    post(postId: ID!): Post
     getProduct(productId: ID!): Product
     getHomepageProducts: [Product]
     getProducts(category: String!): [Product]
