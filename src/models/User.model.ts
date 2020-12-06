@@ -1,28 +1,38 @@
-import { getModelForClass, pre, prop } from '@typegoose/typegoose';
+import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 
 @ObjectType()
 class UserSocials {
   @Field({ nullable: true })
-  phoneNumber: string;
+  @prop()
+  public phoneNumber?: string;
 
   @Field({ nullable: true })
-  facebook: string;
+  @prop()
+  public facebook?: string;
 
   @Field({ nullable: true })
-  linkedin: string;
+  @prop()
+  public linkedin?: string;
 
   @Field({ nullable: true })
-  instagram: string;
+  @prop()
+  public instagram?: string;
 }
 
+// interface UserSocialss {
+//   phoneNumber: string;
+//   facebook: string;
+//   linkedin: string;
+
+//   instagram: string;
+// }
+
 @ObjectType()
-@pre<User>('save', function () {
-  this.updatedAt = new Date();
-})
 export class User {
-  @Field(() => ID)
-  public _id: string;
+  @Field((_type) => ID)
+  readonly _id: ObjectId;
 
   @prop({ required: true })
   public firebaseId!: string;
@@ -43,19 +53,19 @@ export class User {
   @prop()
   public photo?: string;
 
-  @Field(() => UserSocials)
-  @prop({ required: true, type: () => UserSocials })
+  @Field((_type) => UserSocials)
+  @prop({ required: true, type: () => UserSocials, _id: false })
   public socials!: UserSocials;
 
-  @Field(() => [String], { defaultValue: [] })
+  @Field((_type) => [String], { defaultValue: [] })
   @prop({ type: () => [String] })
   public likes?: string[];
 
-  @Field(() => Date)
-  public createdAt?: Date;
+  @Field((_type) => Date)
+  createdAt?: Date;
 
-  @Field(() => Date)
-  public updatedAt!: Date;
+  @Field((_type) => Date)
+  updatedAt?: Date;
 }
 
 export const UserModel = getModelForClass(User, {

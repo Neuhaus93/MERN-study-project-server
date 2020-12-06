@@ -10,6 +10,7 @@ import {
   Root,
 } from 'type-graphql';
 import { User, UserModel } from '../models/User.model';
+import { DocumentType } from '@typegoose/typegoose';
 
 @InputType()
 class CreateUserInput {
@@ -97,7 +98,7 @@ export class UsersResolver {
       throw new UserInputError('Fields must be filled correctly');
     }
 
-    const newUser = new UserModel({
+    const newUser = await UserModel.create<DocumentType<User>>({
       firebaseId,
       firstName,
       lastName,
@@ -108,13 +109,8 @@ export class UsersResolver {
         linkedin: '',
         instagram: '',
       },
-      likes: [],
+      likes: [] as string[],
       photo: '',
-      // subscription: {
-      //   current: 'free',
-      //   expirationDate: '',
-      //   payHistory: [],
-      // }
     });
     try {
       return await newUser.save();

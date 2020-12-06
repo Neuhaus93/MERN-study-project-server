@@ -1,11 +1,11 @@
-import { getModelForClass, prop, Ref } from '@typegoose/typegoose';
+import { getModelForClass, index, prop, Ref } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { User } from './User.model';
 
 @ObjectType()
-class Reply {
+export class Reply {
   @Field((_type) => ID)
-  public _id?: string;
+  _id?: string;
 
   @Field((_type) => User)
   @prop({ required: true, ref: () => User })
@@ -20,6 +20,8 @@ class Reply {
   public createdAt!: Date;
 }
 
+@index({ title: 'text', body: 'text' })
+@index({ createdAt: -1 })
 @ObjectType()
 export class Post {
   @Field((_type) => ID)
@@ -52,6 +54,8 @@ export class Post {
   updatedAt?: Date;
 }
 
-export const PostModel = getModelForClass(Post, {
+const PostModel = getModelForClass(Post, {
   schemaOptions: { timestamps: true },
 });
+
+export { PostModel };

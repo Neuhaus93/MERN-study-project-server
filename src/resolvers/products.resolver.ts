@@ -114,7 +114,7 @@ export class ProductsResolver {
   }
 
   @Query(() => [Product])
-  async searchProduct(@Arg('term') term: string): Promise<Product[]> {
+  async searchProducts(@Arg('term') term: string): Promise<Product[]> {
     if (!term || term.trim() === '') {
       throw new UserInputError('Must have a search term');
     }

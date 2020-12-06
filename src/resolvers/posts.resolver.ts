@@ -1,14 +1,15 @@
+import { DocumentType } from '@typegoose/typegoose';
 import { AuthenticationError, UserInputError } from 'apollo-server';
 import {
-  Resolver,
-  Query,
   Arg,
-  Mutation,
   Field,
-  InputType,
   FieldResolver,
-  Root,
+  InputType,
   Int,
+  Mutation,
+  Query,
+  Resolver,
+  Root,
 } from 'type-graphql';
 import { Post, PostModel } from '../models/Post.model';
 import { UserModel } from '../models/User.model';
@@ -98,14 +99,15 @@ export class PostsResolver {
       throw new Error('Post need to contain a user');
     }
 
-    const newPost = await PostModel.create({
+    const newPost = await PostModel.create<DocumentType<Post>>({
       title,
       body,
       category,
       creator: userId,
     });
 
-    return await newPost.save();
+    await newPost.save();
+    return newPost;
   }
 
   @Mutation((_returns) => Post)
@@ -129,12 +131,12 @@ export class PostsResolver {
     }
   }
 
-  @Mutation((_returns) => Boolean)
+  @Mutation((_returns) => Post)
   async replyPost(
     @Arg('postId') postId: string,
     @Arg('userId') userId: string,
     @Arg('body') body: string
-  ): Promise<boolean> {
+  ): Promise<Post> {
     if (postId.trim() === '' || userId.trim() === '' || body.trim() === '') {
       throw new UserInputError('Must have userId and body');
     }
@@ -156,7 +158,7 @@ export class PostsResolver {
         });
       }
       await post.save();
-      return true;
+      return post;
     } catch (err) {
       throw new Error(err);
     }

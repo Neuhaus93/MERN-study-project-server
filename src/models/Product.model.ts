@@ -1,18 +1,20 @@
-import { getModelForClass, prop, Ref } from '@typegoose/typegoose';
+import { getModelForClass, index, prop, Ref } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { User } from './User.model';
 
+@index({ title: 'text', description: 'text' })
+@index({ createdAt: -1 })
 @ObjectType()
 export class Product {
   @Field(() => ID)
-  public _id: string;
+  _id: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ required: true, text: true })
   public title!: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ required: true, text: true })
   public description!: string;
 
   @Field()
@@ -36,10 +38,10 @@ export class Product {
   public creator!: Ref<User>;
 
   @Field()
-  public createdAt!: Date;
+  createdAt: Date;
 
   @Field()
-  public updatedAt!: Date;
+  updatedAt: Date;
 }
 
 export const ProductModel = getModelForClass(Product, {
