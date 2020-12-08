@@ -149,13 +149,9 @@ export class PostsResolver {
       if (!user) throw new UserInputError('User does not exist');
 
       if (!post.replies) {
-        post.replies = [{ user, body, createdAt: new Date() }];
+        post.replies = [{ user, body }];
       } else {
-        post.replies.push({
-          user,
-          body,
-          createdAt: new Date(),
-        });
+        post.replies.push({ user, body });
       }
       await post.save();
       return post;

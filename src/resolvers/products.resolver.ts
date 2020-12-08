@@ -1,13 +1,5 @@
 import { AuthenticationError, UserInputError } from 'apollo-server';
-import {
-  Arg,
-  Field,
-  InputType,
-  Int,
-  Mutation,
-  Query,
-  Resolver,
-} from 'type-graphql';
+import { Arg, Field, InputType, Mutation, Query, Resolver } from 'type-graphql';
 import { Product, ProductModel } from '../models/Product.model';
 import { User, UserModel } from '../models/User.model';
 
@@ -25,8 +17,8 @@ class CreateProductInput {
   @Field()
   location: string;
 
-  @Field(() => Int)
-  price: number;
+  @Field()
+  price: string;
 
   @Field()
   category: string;
@@ -38,7 +30,7 @@ class UpdateProductInput extends CreateProductInput {
   productId: string;
 
   @Field(() => [String])
-  imagesSrc: string[];
+  images: string[];
 }
 
 @Resolver((_of) => ProductModel)
@@ -150,16 +142,18 @@ export class ProductsResolver {
 
     try {
       const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new UserInputError('User does not exist');
+      }
 
-      const newProduct = new ProductModel({
+      const newProduct = await ProductModel.create({
         creator: user,
         title,
         description,
         location,
-        price,
+        price: parseInt(price),
         category,
-        imagesSrc: [],
-        createdAt: new Date().toISOString(),
+        images: [],
       });
 
       (await newProduct.save()).populate('creator');
@@ -215,7 +209,7 @@ export class ProductsResolver {
       location,
       price,
       category,
-      imagesSrc,
+      images,
     } = updateProductInput;
 
     if (!userId || !productId || !userId.trim() || !productId.trim()) {
@@ -237,9 +231,9 @@ export class ProductsResolver {
       title && (product.title = title);
       description && (product.description = description);
       location && (product.location = location);
-      price && (product.price = price);
+      price && (product.price = parseInt(price));
       category && (product.category = category);
-      imagesSrc && (product.images = imagesSrc);
+      images && (product.images = images);
 
       await product.save();
       return product;

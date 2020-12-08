@@ -1,13 +1,14 @@
 import { getModelForClass, index, prop, Ref } from '@typegoose/typegoose';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, Int, ObjectType } from 'type-graphql';
+import { ObjectId } from 'mongodb';
 import { User } from './User.model';
 
 @index({ title: 'text', description: 'text' })
 @index({ createdAt: -1 })
 @ObjectType()
 export class Product {
-  @Field(() => ID)
-  _id: string;
+  @Field((_type) => ID)
+  readonly _id: ObjectId;
 
   @Field()
   @prop({ required: true, text: true })
@@ -21,7 +22,7 @@ export class Product {
   @prop({ requried: true })
   public location!: string;
 
-  @Field()
+  @Field((_type) => Int)
   @prop({ required: true })
   public price!: number;
 
@@ -29,19 +30,19 @@ export class Product {
   @prop({ required: true })
   public category!: string;
 
-  @Field(() => [String])
+  @Field((_type) => [String])
   @prop({ type: () => [String] })
   public images?: string[];
 
-  @Field(() => User)
+  @Field((_type) => User)
   @prop({ required: true, ref: () => User })
   public creator!: Ref<User>;
 
-  @Field()
-  createdAt: Date;
+  @Field((_type) => Date)
+  readonly createdAt: Date;
 
-  @Field()
-  updatedAt: Date;
+  @Field((_type) => Date)
+  readonly updatedAt: Date;
 }
 
 export const ProductModel = getModelForClass(Product, {

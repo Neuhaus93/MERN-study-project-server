@@ -1,11 +1,12 @@
 import { getModelForClass, index, prop, Ref } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { ObjectId } from 'mongodb';
 import { User } from './User.model';
 
 @ObjectType()
 export class Reply {
   @Field((_type) => ID)
-  _id?: string;
+  readonly _id?: ObjectId;
 
   @Field((_type) => User)
   @prop({ required: true, ref: () => User })
@@ -16,8 +17,8 @@ export class Reply {
   public body!: string;
 
   @Field((_type) => Date)
-  @prop({ required: true, type: () => Date, default: new Date() })
-  public createdAt!: Date;
+  @prop({ type: () => Date, default: new Date() })
+  public createdAt?: Date;
 }
 
 @index({ title: 'text', body: 'text' })
@@ -25,7 +26,7 @@ export class Reply {
 @ObjectType()
 export class Post {
   @Field((_type) => ID)
-  _id?: string;
+  readonly _id?: string;
 
   @Field()
   @prop({ required: true })
@@ -39,19 +40,19 @@ export class Post {
   @prop({ required: true })
   public category!: string;
 
-  @Field(() => [Reply])
+  @Field((_type) => [Reply])
   @prop({ type: () => [Reply], default: [] })
   public replies?: Reply[];
 
-  @Field(() => User)
+  @Field((_type) => User)
   @prop({ required: true, ref: () => User })
   public creator!: Ref<User>;
 
-  @Field(() => Date)
-  createdAt?: Date;
+  @Field((_type) => Date)
+  readonly createdAt: Date;
 
-  @Field(() => Date)
-  updatedAt?: Date;
+  @Field((_type) => Date)
+  readonly updatedAt: Date;
 }
 
 const PostModel = getModelForClass(Post, {

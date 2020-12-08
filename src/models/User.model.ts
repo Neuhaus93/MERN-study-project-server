@@ -62,10 +62,10 @@ export class User {
   public likes?: string[];
 
   @Field((_type) => Date)
-  createdAt?: Date;
+  readonly createdAt: Date;
 
   @Field((_type) => Date)
-  updatedAt?: Date;
+  readonly updatedAt: Date;
 }
 
 export const UserModel = getModelForClass(User, {
