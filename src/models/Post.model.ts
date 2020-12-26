@@ -10,7 +10,7 @@ export class Reply {
 
   @Field((_type) => User)
   @prop({ required: true, ref: () => User })
-  public user!: Ref<User>;
+  public creator!: Ref<User>;
 
   @Field()
   @prop({ required: true })

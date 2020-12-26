@@ -2,6 +2,8 @@ import { DocumentType } from '@typegoose/typegoose';
 import { AuthenticationError, UserInputError } from 'apollo-server';
 import {
   Arg,
+  Authorized,
+  Ctx,
   Field,
   FieldResolver,
   InputType,
@@ -12,7 +14,8 @@ import {
   Root,
 } from 'type-graphql';
 import { Post, PostModel } from '../models/Post.model';
-import { UserModel } from '../models/User.model';
+import { User, UserModel } from '../models/User.model';
+import { ContextType } from '../types';
 
 @InputType()
 class PostInput implements Partial<Post> {
@@ -39,7 +42,7 @@ export class PostsResolver {
       const post = await PostModel.findById(postId)
         .populate({
           path: 'replies',
-          populate: { path: 'user' },
+          populate: { path: 'creator' },
         })
         .populate('creator');
       if (post) {
@@ -85,43 +88,51 @@ export class PostsResolver {
     }
   }
 
+  @Authorized()
   @Mutation((_returns) => Post)
   async createPost(
-    @Arg('userid') userId: string,
-    @Arg('postInput') postInput: PostInput
+    @Arg('postInput') postInput: PostInput,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<Post> {
     const { title, body, category } = postInput;
 
     if (!body || body.trim() === '') {
       throw new Error('Post body must not be empty');
     }
-    if (!userId || userId.trim() === '') {
-      throw new Error('Post need to contain a user');
+
+    const user = await UserModel.findOne({ firebaseId });
+    if (!user) {
+      throw new AuthenticationError('Authentication error');
     }
 
     const newPost = await PostModel.create<DocumentType<Post>>({
       title,
       body,
-      category,
-      creator: userId,
+      category: category.toLowerCase(),
+      creator: user._id,
     });
 
     await newPost.save();
     return newPost;
   }
 
+  @Authorized()
   @Mutation((_returns) => Post)
   async deletePost(
-    @Arg('userId') userId: string,
-    @Arg('postId') postId: string
+    @Arg('postId') postId: string,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<Post> {
-    if (userId.trim() === '' || postId.trim() === '') {
+    if (postId.trim() === '') {
       throw new AuthenticationError('User and post ID cannot be empty');
     }
 
     try {
-      const post = await PostModel.findById(postId);
-      if (userId === post?.creator?.toString()) {
+      const post = await PostModel.findById(postId).populate('creator');
+      if (!post) {
+        throw new Error('Post not found');
+      }
+
+      if ((post.creator as User).firebaseId === firebaseId) {
         return await post.deleteOne();
       } else {
         throw new AuthenticationError('User cannot perform this action');
@@ -131,13 +142,14 @@ export class PostsResolver {
     }
   }
 
+  @Authorized()
   @Mutation((_returns) => Post)
   async replyPost(
     @Arg('postId') postId: string,
-    @Arg('userId') userId: string,
-    @Arg('body') body: string
+    @Arg('body') body: string,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<Post> {
-    if (postId.trim() === '' || userId.trim() === '' || body.trim() === '') {
+    if (postId.trim() === '' || body.trim() === '') {
       throw new UserInputError('Must have userId and body');
     }
 
@@ -145,13 +157,13 @@ export class PostsResolver {
       const post = await PostModel.findById(postId);
       if (!post) throw new UserInputError('Post does not exist');
 
-      const user = await UserModel.findById(userId);
-      if (!user) throw new UserInputError('User does not exist');
+      const creator = await UserModel.findOne({ firebaseId });
+      if (!creator) throw new UserInputError('User does not exist');
 
       if (!post.replies) {
-        post.replies = [{ user, body }];
+        post.replies = [{ creator, body }];
       } else {
-        post.replies.push({ user, body });
+        post.replies.push({ creator, body });
       }
       await post.save();
       return post;
@@ -160,17 +172,22 @@ export class PostsResolver {
     }
   }
 
+  @Authorized()
   @Mutation((_returns) => Post)
   async deleteReply(
     @Arg('postId') postId: string,
-    @Arg('replyId') replyId: string
+    @Arg('replyId') replyId: string,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<Post> {
     if (postId.trim() === '' || replyId.trim() === '') {
       throw new UserInputError('Must have the Ids');
     }
 
     try {
-      const post = await PostModel.findById(postId);
+      const post = await PostModel.findById(postId).populate({
+        path: 'replies',
+        populate: { path: 'creator' },
+      });
       if (!post || !post.replies) {
         throw new UserInputError('Post does not exist');
       }
@@ -178,7 +195,13 @@ export class PostsResolver {
       // console.log({ replyIdType: typeof replyId, replies: post.replies });
 
       const newReplies = post.replies.filter((reply) => {
-        return reply._id?.toString() !== replyId;
+        if (
+          reply._id?.toString() === replyId &&
+          (reply.creator as User).firebaseId === firebaseId
+        ) {
+          return false;
+        }
+        return true;
       });
 
       if (post.replies.length === newReplies.length) {

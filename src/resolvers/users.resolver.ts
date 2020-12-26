@@ -1,6 +1,8 @@
 import { AuthenticationError, UserInputError } from 'apollo-server';
 import {
   Arg,
+  Authorized,
+  Ctx,
   Field,
   FieldResolver,
   InputType,
@@ -11,6 +13,7 @@ import {
 } from 'type-graphql';
 import { User, UserModel } from '../models/User.model';
 import { DocumentType } from '@typegoose/typegoose';
+import { ContextType } from '../types';
 
 @InputType()
 class CreateUserInput {
@@ -119,15 +122,12 @@ export class UsersResolver {
     }
   }
 
+  @Authorized()
   @Mutation((_returns) => User)
   async updateUser(
-    @Arg('userId') userId: string,
-    @Arg('updateUserInput') updateUserInput: UpdateUserInput
+    @Arg('updateUserInput') updateUserInput: UpdateUserInput,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<User | undefined> {
-    if (!userId || userId.trim() === '') {
-      throw new UserInputError('Must have the user ID');
-    }
-
     const {
       firstName,
       lastName,
@@ -138,7 +138,7 @@ export class UsersResolver {
     } = updateUserInput;
 
     try {
-      const user = await UserModel.findById(userId);
+      const user = await UserModel.findOne({ firebaseId });
       if (!user) {
         throw new Error('User not found');
       }
@@ -162,18 +162,19 @@ export class UsersResolver {
     }
   }
 
+  @Authorized()
   @Mutation(() => User)
   async likeProduct(
-    @Arg('userId') userId: string,
-    @Arg('productId') productId: string
+    @Arg('productId') productId: string,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<User> {
     // If arguments are not passed correctly, throw an error
-    if (productId.trim() === '' || userId.trim() === '') {
+    if (productId.trim() === '') {
       throw new UserInputError('Must have the ad ID');
     }
 
     // Get the user from the database
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findOne({ firebaseId });
 
     // User does not exist
     if (!user) {
@@ -194,10 +195,11 @@ export class UsersResolver {
     return user;
   }
 
+  @Authorized()
   @Mutation(() => User)
   async addUserImage(
-    @Arg('firebaseId') firebaseId: string,
-    @Arg('imageSrc') imageSrc: string
+    @Arg('imageSrc') imageSrc: string,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<User> {
     if (!firebaseId || !imageSrc) {
       throw new UserInputError('Must have firebaseId and image src');

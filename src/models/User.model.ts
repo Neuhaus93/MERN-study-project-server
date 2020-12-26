@@ -1,4 +1,4 @@
-import { getModelForClass, prop } from '@typegoose/typegoose';
+import { getModelForClass, prop, index } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 
@@ -21,14 +21,7 @@ class UserSocials {
   public instagram?: string;
 }
 
-// interface UserSocialss {
-//   phoneNumber: string;
-//   facebook: string;
-//   linkedin: string;
-
-//   instagram: string;
-// }
-
+@index({ firebaseId: 1 }, { unique: true })
 @ObjectType()
 export class User {
   @Field((_type) => ID)

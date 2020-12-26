@@ -1,13 +1,20 @@
 import { AuthenticationError, UserInputError } from 'apollo-server';
-import { Arg, Field, InputType, Mutation, Query, Resolver } from 'type-graphql';
+import {
+  Arg,
+  Authorized,
+  Ctx,
+  Field,
+  InputType,
+  Mutation,
+  Query,
+  Resolver,
+} from 'type-graphql';
 import { Product, ProductModel } from '../models/Product.model';
 import { User, UserModel } from '../models/User.model';
+import { ContextType } from '../types';
 
 @InputType()
 class CreateProductInput {
-  @Field()
-  userId: string;
-
   @Field()
   title: string;
 
@@ -71,6 +78,7 @@ export class ProductsResolver {
     }
   }
 
+  @Authorized()
   @Query(() => [Product])
   async userProducts(@Arg('userId') userId: string): Promise<Product[]> {
     if (userId.trim() === '') {
@@ -85,6 +93,7 @@ export class ProductsResolver {
     }
   }
 
+  @Authorized()
   @Query(() => [Product])
   async userFavorites(
     @Arg('favoritesList', () => [String]) favoritesList: string[]
@@ -121,12 +130,13 @@ export class ProductsResolver {
     }
   }
 
+  @Authorized()
   @Mutation(() => Product)
   async createProduct(
-    @Arg('createProductInput') createProductInput: CreateProductInput
+    @Arg('createProductInput') createProductInput: CreateProductInput,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<Product> {
     const {
-      userId,
       title,
       description,
       location,
@@ -141,7 +151,7 @@ export class ProductsResolver {
     }
 
     try {
-      const user = await UserModel.findById(userId);
+      const user = await UserModel.findOne({ firebaseId });
       if (!user) {
         throw new UserInputError('User does not exist');
       }
@@ -152,7 +162,7 @@ export class ProductsResolver {
         description,
         location,
         price: parseInt(price),
-        category,
+        category: category.toLowerCase(),
         images: [],
       });
 
@@ -164,6 +174,7 @@ export class ProductsResolver {
     }
   }
 
+  @Authorized()
   @Mutation(() => Product)
   async addProductImages(
     @Arg('productId') productId: string,
@@ -197,12 +208,13 @@ export class ProductsResolver {
     }
   }
 
+  @Authorized()
   @Mutation(() => Product)
   async udpateProduct(
-    @Arg('updateProductInput') updateProductInput: UpdateProductInput
+    @Arg('updateProductInput') updateProductInput: UpdateProductInput,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<Product> {
     const {
-      userId,
       productId,
       title,
       description,
@@ -212,7 +224,7 @@ export class ProductsResolver {
       images,
     } = updateProductInput;
 
-    if (!userId || !productId || !userId.trim() || !productId.trim()) {
+    if (!productId || !productId.trim()) {
       throw new UserInputError('Cannot have undefined IDs');
     }
 
@@ -224,7 +236,7 @@ export class ProductsResolver {
         throw new UserInputError('Product does not exist');
       }
 
-      if ((product.creator as User)._id.toString() !== userId) {
+      if ((product.creator as User).firebaseId.toString() !== firebaseId) {
         throw new AuthenticationError('User cannot perform this action');
       }
 
@@ -242,28 +254,31 @@ export class ProductsResolver {
     }
   }
 
+  @Authorized()
   @Mutation((_returns) => Boolean)
   async deleteProduct(
-    @Arg('userId') userId: string,
-    @Arg('productId') productId: string
+    @Arg('productId') productId: string,
+    @Ctx() { firebaseId }: ContextType
   ): Promise<boolean> {
-    if (!userId || !productId) {
+    if (!productId) {
       throw new UserInputError('Cannot have undefined IDs');
     }
 
-    if (userId.trim() === '' || productId.trim() === '') {
+    if (productId.trim() === '') {
       throw new UserInputError('IDs cannot be empty');
     }
 
     try {
-      const product = await ProductModel.findById(productId);
+      const product = await ProductModel.findById(productId).populate(
+        'creator'
+      );
       if (!product) {
         throw new UserInputError('Product does not exist');
       }
       if (!product.creator) {
         throw new Error('Creator of product not found');
       }
-      if (userId === product.creator.toString()) {
+      if ((product.creator as User).firebaseId === firebaseId) {
         await product.deleteOne();
         return true;
       } else {
